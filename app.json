@@ -1,0 +1,16 @@
+{
+    "expo": {
+      "name": "TrashMap",
+      "slug": "TrashMap",
+      "main": "App.js",
+      "version": "0.0.1",
+      "orientation": "portrait",
+      "userInterfaceStyle": "light",
+      "assetBundlePatterns": ["**/*"],
+      "ios": {
+        "supportsTablet": true
+      },
+      "android": {},
+      "web": {}
+    }
+  }

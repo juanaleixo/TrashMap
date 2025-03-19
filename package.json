@@ -1,0 +1,22 @@
+{
+  "name": "trashmap",
+  "version": "0.0.1",
+  "scripts": {
+    "start": "expo start --tunnel",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web"
+  },
+  "dependencies": {
+    "@react-navigation/bottom-tabs": "^7.3.1",
+    "@react-navigation/native": "^7.0.17",
+    "expo": "^52.0.39",
+    "react": "^18.3.1",
+    "react-native": "^0.76.7",
+    "react-native-safe-area-context": "^4.12.0",
+    "react-dom": "18.3.1",
+    "react-native-web": "~0.19.13",
+    "undefined": "@expo/metro-runtime\r",
+    "@expo/metro-runtime": "~4.0.1"
+  }
+}
