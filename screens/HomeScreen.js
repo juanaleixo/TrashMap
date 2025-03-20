@@ -1,10 +1,13 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, useColorScheme } from 'react-native';
 
 const HomeScreen = () => {
-  return (
-    <View style={styles.container}>
-      <Text style={styles.text}>Tela Início</Text>
+  const colorScheme = useColorScheme();
+  const isDarkMode = colorScheme === 'dark';
+
+  return (  
+    <View style={[styles.container, { backgroundColor: isDarkMode ? 'black' : 'white' }]}>
+      <Text style={[styles.text, { color: isDarkMode ? 'white' : 'black' }]}>Tela Início</Text>
     </View>
   );
 };
@@ -14,7 +17,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
   },
   text: {
     fontSize: 24,
