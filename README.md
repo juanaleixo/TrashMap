@@ -13,19 +13,19 @@ Currently, the project is in the development phase (MVP), and we will be launchi
 ✅ Locate nearby selective collection points  
 ✅ Information on the decomposition time of materials  
 ✅ Integration with municipalities and recycling companies  
-✅ Intuitive interface for easy use  
+✅ Intuitive interface for easy use
 
 ## 🛠️ Project Status
 
 🚧 **Under Construction** 🚧  
-We are actively working to launch the first version of TrashMap! Stay tuned for updates.  
+We are actively working to launch the first version of TrashMap! Stay tuned for updates.
 
 ## 📲 Technologies Used
 
-- React Native  
-- Firebase  
-- Expo  
-- Geolocation  
+- React Native
+- Firebase
+- Expo
+- Geolocation
 
 ## 💡 How to Contribute?
 
