@@ -7,7 +7,7 @@ import {
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useColorScheme } from "react-native";
+import { useColorScheme, Platform } from "react-native";
 import HomeScreen from "../screens/HomeScreen";
 import MapScreen from "../screens/MapScreen";
 
@@ -17,6 +17,7 @@ const TabNavigator = () => {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
   const isDarkMode = colorScheme === "dark";
+  const isMobile = Platform.OS === "ios" || Platform.OS === "android";
 
   return (
     <NavigationContainer theme={isDarkMode ? DarkTheme : DefaultTheme}>
@@ -44,7 +45,7 @@ const TabNavigator = () => {
         })}
       >
         <Tab.Screen name="Início" component={HomeScreen} />
-        <Tab.Screen name="Mapa" component={MapScreen} />
+        {isMobile && <Tab.Screen name="Mapa" component={MapScreen} />}
       </Tab.Navigator>
     </NavigationContainer>
   );
