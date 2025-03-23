@@ -1,11 +1,80 @@
-import React from "react";
-import MapView, { PROVIDER_GOOGLE } from "react-native-maps";
+import React, { useEffect, useFocusEffect, useCallback, useState } from "react";
 import { StyleSheet, View } from "react-native";
+import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
+import { supabase } from "../lib/supabase";
+import * as Location from "expo-location";
 
-export default function App() {
+export default function MapScreen() {
+  const [initialRegion, setInitialRegion] = useState({
+    latitude: -14.235004, // Latitude central aproximada do Brasil
+    longitude: -51.92528, // Longitude central aproximada do Brasil
+    latitudeDelta: 40, // Abrangência maior para cobrir o Brasil
+    longitudeDelta: 40, // Abrangência maior para cobrir o Brasil
+  });
+
+  const [pontos, setPontos] = useState([]);
+
+  const [show, setShow] = useState(false);
+
+  const getUserLocation = async () => {
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== "granted") {
+      console.error("Permissão de localização negada.");
+      return;
+    }
+    const location = await Location.getCurrentPositionAsync({});
+    setInitialRegion({
+      latitude: location.coords.latitude,
+      longitude: location.coords.longitude,
+      latitudeDelta: 0.0922,
+      longitudeDelta: 0.0421,
+    });
+  };
+
+  const fetchPontos = async () => {
+    const { data, error } = await supabase.rpc("listar_pontos_mapa");
+    if (error) {
+      console.error("Erro ao buscar pontos:", error);
+    } else {
+      console.log("Pontos recebidos:", data);
+      setPontos(data);
+    }
+  };
+
+  const showTrue = async () => {
+    setShow(true);
+  };
+
+  // Busca ao montar o componente
+  useEffect(() => {
+    const initialize = async () => {
+      await getUserLocation();
+      await fetchPontos();
+      showTrue();
+    };
+    initialize();
+  }, []);
+
   return (
     <View style={styles.container}>
-      <MapView style={styles.map} showsUserLocation={true} />
+      {show && (
+        <MapView
+          style={styles.map}
+          showsUserLocation={true}
+          initialRegion={initialRegion}
+        >
+          {pontos.map((ponto) => (
+            <Marker
+              key={ponto.id}
+              coordinate={{
+                latitude: ponto.latitude,
+                longitude: ponto.longitude,
+              }}
+              title={ponto.name}
+            />
+          ))}
+        </MapView>
+      )}
     </View>
   );
 }
