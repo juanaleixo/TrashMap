@@ -1,5 +1,5 @@
 import React, { useEffect, useFocusEffect, useCallback, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, View, Modal, Text, Button } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { supabase } from "../lib/supabase";
 import * as Location from "expo-location";
@@ -15,6 +15,8 @@ export default function MapScreen() {
   const [pontos, setPontos] = useState([]);
 
   const [show, setShow] = useState(false);
+
+  const [selectedPonto, setSelectedPonto] = useState(null);
 
   const getUserLocation = async () => {
     const { status } = await Location.requestForegroundPermissionsAsync();
@@ -61,7 +63,7 @@ export default function MapScreen() {
         <MapView
           style={styles.map}
           showsUserLocation={true}
-          initialRegion={initialRegion}
+          region={initialRegion}
         >
           {pontos.map((ponto) => (
             <Marker
@@ -71,10 +73,25 @@ export default function MapScreen() {
                 longitude: ponto.longitude,
               }}
               title={ponto.name}
+              onPress={() => setSelectedPonto(ponto)}
             />
           ))}
         </MapView>
       )}
+
+{selectedPonto && (
+      <Modal
+        animationType="slide"
+        visible={true}
+        onRequestClose={() => setSelectedPonto(null)}
+      >
+        <View style={styles.modalView}>
+          <Text>{selectedPonto.name}</Text>
+          <Text>Materiais aceitos: Teste</Text>
+          <Button title="Fechar" onPress={() => setSelectedPonto(null)} />
+        </View>
+      </Modal>
+    )}
     </View>
   );
 }
@@ -86,5 +103,11 @@ const styles = StyleSheet.create({
   map: {
     width: "100%",
     height: "100%",
+  },
+  modalView: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
   },
 });
