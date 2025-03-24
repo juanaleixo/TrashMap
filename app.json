@@ -6,7 +6,9 @@
     "version": "0.0.1",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.juanaleixo.trashmap",
@@ -15,7 +17,9 @@
         "NSLocationWhenInUseUsageDescription": "Este aplicativo usa sua localização para mostrar pontos de coleta de lixo próximos."
       }
     },
-    "android": {},
+    "android": {
+      "package": "com.juanaleixo.trashmap"
+    },
     "extra": {
       "eas": {
         "projectId": "fc4b1265-c01e-48dd-91ae-3c2f2191d157"
