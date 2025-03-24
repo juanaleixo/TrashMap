@@ -1,15 +1,25 @@
 {
   "expo": {
-    "name": "TrashMap",
-    "slug": "TrashMap",
+    "name": "trashMap",
+    "slug": "trashmap",
     "main": "App.js",
     "version": "0.0.1",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "assetBundlePatterns": ["**/*"],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.juanaleixo.trashmap",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSLocationWhenInUseUsageDescription": "Este aplicativo usa sua localização para mostrar pontos de coleta de lixo próximos."
+      }
     },
-    "android": {}
+    "android": {},
+    "extra": {
+      "eas": {
+        "projectId": "fc4b1265-c01e-48dd-91ae-3c2f2191d157"
+      }
+    }
   }
 }
