@@ -1,8 +1,10 @@
-import React, { useEffect, useFocusEffect, useCallback, useState } from "react";
-import { StyleSheet, View, Modal, Text, Button } from "react-native";
+import React, { useEffect, useRef, useMemo, useState } from "react";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { StyleSheet, View, Text, TouchableOpacity } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { supabase } from "../lib/supabase";
 import * as Location from "expo-location";
+import BottomSheet from "@gorhom/bottom-sheet";
 
 export default function MapScreen() {
   const [initialRegion, setInitialRegion] = useState({
@@ -14,9 +16,9 @@ export default function MapScreen() {
 
   const [pontos, setPontos] = useState([]);
 
-  const [show, setShow] = useState(false);
-
   const [selectedPonto, setSelectedPonto] = useState(null);
+  const [show, setShow] = useState(false);
+  const bottomSheetRef = useRef(null);
 
   const getUserLocation = async () => {
     const { status } = await Location.requestForegroundPermissionsAsync();
@@ -57,13 +59,25 @@ export default function MapScreen() {
     initialize();
   }, []);
 
+  const snapPoints = useMemo(() => ["25%", "50%"], []);
+
+  const handleMarkerPress = (ponto) => {
+    setSelectedPonto(ponto);
+    bottomSheetRef.current?.expand();
+  };
+
+  const handleClose = () => {
+    bottomSheetRef.current?.close();
+    setSelectedPonto(null);
+  };
+
   return (
-    <View style={styles.container}>
+    <GestureHandlerRootView style={styles.container}>
       {show && (
         <MapView
           style={styles.map}
           showsUserLocation={true}
-          region={initialRegion}
+          initialRegion={initialRegion}
         >
           {pontos.map((ponto) => (
             <Marker
@@ -72,42 +86,62 @@ export default function MapScreen() {
                 latitude: ponto.latitude,
                 longitude: ponto.longitude,
               }}
-              title={ponto.name}
-              onPress={() => setSelectedPonto(ponto)}
+              onPress={() => handleMarkerPress(ponto)}
             />
           ))}
         </MapView>
       )}
 
-{selectedPonto && (
-      <Modal
-        animationType="slide"
-        visible={true}
-        onRequestClose={() => setSelectedPonto(null)}
+      <BottomSheet
+        ref={bottomSheetRef}
+        index={-1}
+        snapPoints={snapPoints}
+        enablePanDownToClose
+        onClose={() => setSelectedPonto(null)}
       >
-        <View style={styles.modalView}>
-          <Text>{selectedPonto.name}</Text>
-          <Text>Materiais aceitos: Teste</Text>
-          <Button title="Fechar" onPress={() => setSelectedPonto(null)} />
-        </View>
-      </Modal>
-    )}
-    </View>
+        {selectedPonto && (
+          <View style={styles.sheetContent}>
+            <View style={styles.sheetHeader}>
+              <Text style={styles.sheetTitle}>{selectedPonto.name}</Text>
+              <TouchableOpacity onPress={handleClose}>
+                <Text style={styles.closeText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.materialsText}>
+              Materiais aceitos: Plástico, Papel, Vidro
+            </Text>
+          </View>
+        )}
+      </BottomSheet>
+    </GestureHandlerRootView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
   map: {
     width: "100%",
     height: "100%",
   },
-  modalView: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+  container: { flex: 1 },
+  sheetContent: {
     padding: 20,
+  },
+  sheetHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  sheetTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  closeText: {
+    fontSize: 22,
+    color: "#666",
+  },
+  materialsText: {
+    fontSize: 16,
+    marginTop: 10,
   },
 });

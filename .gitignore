@@ -35,7 +35,9 @@ yarn-error.*
 # build files
 ios
 android
-.app*
+*.app
+*.tar.gz
+*.sh
 
 # local env files
 .env*
