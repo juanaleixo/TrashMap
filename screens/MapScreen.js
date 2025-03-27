@@ -4,7 +4,7 @@ import { StyleSheet, View, Text, TouchableOpacity } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { supabase } from "../lib/supabase";
 import * as Location from "expo-location";
-import BottomSheet from "@gorhom/bottom-sheet";
+import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 
 export default function MapScreen() {
   const [initialRegion, setInitialRegion] = useState({
@@ -15,24 +15,24 @@ export default function MapScreen() {
   });
 
   const [pontos, setPontos] = useState([]);
-
   const [selectedPonto, setSelectedPonto] = useState(null);
   const [show, setShow] = useState(false);
+
   const bottomSheetRef = useRef(null);
 
   const getUserLocation = async () => {
     const { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== "granted") {
-      console.error("Permissão de localização negada.");
-      return;
+    if (status == "granted") {
+      const location = await Location.getCurrentPositionAsync({});
+      setInitialRegion({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        latitudeDelta: 0.0922,
+        longitudeDelta: 0.0421,
+      });
+    } else {
+      console.log("Permissão de localização negada.");
     }
-    const location = await Location.getCurrentPositionAsync({});
-    setInitialRegion({
-      latitude: location.coords.latitude,
-      longitude: location.coords.longitude,
-      latitudeDelta: 0.0922,
-      longitudeDelta: 0.0421,
-    });
   };
 
   const fetchPontos = async () => {
@@ -99,19 +99,21 @@ export default function MapScreen() {
         enablePanDownToClose
         onClose={() => setSelectedPonto(null)}
       >
-        {selectedPonto && (
-          <View style={styles.sheetContent}>
-            <View style={styles.sheetHeader}>
-              <Text style={styles.sheetTitle}>{selectedPonto.name}</Text>
-              <TouchableOpacity onPress={handleClose}>
-                <Text style={styles.closeText}>✕</Text>
-              </TouchableOpacity>
+        <BottomSheetView>
+          {selectedPonto && (
+            <View style={styles.sheetContent}>
+              <View style={styles.sheetHeader}>
+                <Text style={styles.sheetTitle}>{selectedPonto.name}</Text>
+                <TouchableOpacity onPress={handleClose}>
+                  <Text style={styles.closeText}>✕</Text>
+                </TouchableOpacity>
+              </View>
+              <Text style={styles.materialsText}>
+                Materiais aceitos: Plástico, Papel, Vidro
+              </Text>
             </View>
-            <Text style={styles.materialsText}>
-              Materiais aceitos: Plástico, Papel, Vidro
-            </Text>
-          </View>
-        )}
+          )}
+        </BottomSheetView>
       </BottomSheet>
     </GestureHandlerRootView>
   );
