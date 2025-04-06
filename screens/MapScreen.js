@@ -4,9 +4,15 @@ import { StyleSheet, View, Text, TouchableOpacity } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { supabase } from "../lib/supabase";
 import * as Location from "expo-location";
-import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import BottomSheet, { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
+import { useRoute } from "@react-navigation/native";
+import { useColorScheme } from "react-native";
 
 export default function MapScreen() {
+  const route = useRoute(); // Obtemos os parâmetros da rota
+  const { selectedPonto, centerOnPonto } = route.params || {};
+  const mapRef = useRef(null); // Referência para o MapView
+
   const [initialRegion, setInitialRegion] = useState({
     latitude: -14.235004, // Latitude central aproximada do Brasil
     longitude: -51.92528, // Longitude central aproximada do Brasil
@@ -15,10 +21,12 @@ export default function MapScreen() {
   });
 
   const [pontos, setPontos] = useState([]);
-  const [selectedPonto, setSelectedPonto] = useState(null);
+  const [selectedPontoState, setSelectedPontoState] = useState(null); // renomeado para evitar conflito
   const [show, setShow] = useState(false);
 
   const bottomSheetRef = useRef(null);
+  const colorScheme = useColorScheme(); // Obtém o esquema de cores atual (light ou dark)
+  const isDarkMode = colorScheme === "dark";
 
   const getUserLocation = async () => {
     const { status } = await Location.requestForegroundPermissionsAsync();
@@ -59,25 +67,60 @@ export default function MapScreen() {
     initialize();
   }, []);
 
-  const snapPoints = useMemo(() => ["25%", "50%"], []);
+  // Atualiza o estado com os parâmetros recebidos para centralizar o mapa
+  useEffect(() => {
+    if (selectedPonto && centerOnPonto) {
+      console.log("Parâmetro recebido:", selectedPonto);
+      setSelectedPontoState(selectedPonto);
+      handleMarkerPress(selectedPonto);
+    }
+  }, [selectedPonto, centerOnPonto]);
 
   const handleMarkerPress = (ponto) => {
-    setSelectedPonto(ponto);
+    setSelectedPontoState(ponto);
     bottomSheetRef.current?.expand();
+    if (mapRef.current) {
+      mapRef.current.animateToRegion(
+        {
+          latitude: ponto.latitude - 0.005, // offset para subir o marcador
+          longitude: ponto.longitude,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        },
+        500 // Duração da animação
+      );
+    }
   };
 
   const handleClose = () => {
     bottomSheetRef.current?.close();
-    setSelectedPonto(null);
+    if (mapRef.current) {
+      mapRef.current.animateToRegion(
+        {
+          longitude: currentRegion.longitude,
+          latitude: currentRegion.latitude + 0.005,
+          latitudeDelta: currentRegion.latitudeDelta,
+          longitudeDelta: currentRegion.longitudeDelta,
+        },
+        500 // Duração da animação
+      );
+    }
+    setSelectedPontoState(null);
   };
+
+  // Adiciona o estado currentRegion para acompanhar a região atual do mapa
+  const [currentRegion, setCurrentRegion] = useState(initialRegion);
+  const snapPoints = useMemo(() => ["25%", "50%"], []);
 
   return (
     <GestureHandlerRootView style={styles.container}>
       {show && (
         <MapView
+          ref={mapRef}
           style={styles.map}
-          showsUserLocation={true}
+                    showsUserLocation={true}
           initialRegion={initialRegion}
+          onRegionChangeComplete={(region) => setCurrentRegion(region)}
         >
           {pontos.map((ponto) => (
             <Marker
@@ -91,25 +134,49 @@ export default function MapScreen() {
           ))}
         </MapView>
       )}
-
+      
       <BottomSheet
         ref={bottomSheetRef}
         index={-1}
         snapPoints={snapPoints}
         enablePanDownToClose
-        onClose={() => setSelectedPonto(null)}
-      >
+        onClose={() => setSelectedPontoState(null)}
+        backgroundStyle={{
+          backgroundColor: isDarkMode ? "#333" : "#fff", // Ajusta a cor de fundo
+        }}>
         <BottomSheetView>
-          {selectedPonto && (
+          {selectedPontoState && (
             <View style={styles.sheetContent}>
               <View style={styles.sheetHeader}>
-                <Text style={styles.sheetTitle}>{selectedPonto.name}</Text>
+                <Text
+                  style={[
+                    styles.sheetTitle,
+                    { color: isDarkMode ? "#fff" : "#000" }, // Ajusta a cor do texto
+                  ]}
+                >
+                  {selectedPontoState.name}
+                </Text>
                 <TouchableOpacity onPress={handleClose}>
-                  <Text style={styles.closeText}>✕</Text>
+                  <Text
+                    style={[
+                      styles.closeText,
+                      { color: isDarkMode ? "#bbb" : "#667" }, // Ajusta a cor do botão de fechar
+                    ]}
+                  >
+                    ✕
+                  </Text>
                 </TouchableOpacity>
               </View>
-              <Text style={styles.materialsText}>
-                Materiais aceitos: Plástico, Papel, Vidro
+              <Text
+                style={[
+                  styles.materialsText,
+                  { color: isDarkMode ? "#ddd" : "#000" }, // Ajusta a cor do texto
+                ]}
+              >
+                Materiais aceitos:{" "}
+                {selectedPontoState.accepted_materials
+                  ? selectedPontoState.accepted_materials.join(", ")
+                  : "N/A"}
               </Text>
             </View>
           )}
@@ -140,7 +207,7 @@ const styles = StyleSheet.create({
   },
   closeText: {
     fontSize: 22,
-    color: "#666",
+    color: "#667",
   },
   materialsText: {
     fontSize: 16,

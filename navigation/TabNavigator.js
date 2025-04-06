@@ -10,6 +10,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColorScheme, Platform } from "react-native";
 import HomeScreen from "../screens/HomeScreen";
 import MapScreen from "../screens/MapScreen";
+import SearchScreen from "../screens/SearchScreen";
 
 const Tab = createBottomTabNavigator();
 
@@ -21,12 +22,14 @@ const TabNavigator = () => {
 
   return (
     <NavigationContainer theme={isDarkMode ? DarkTheme : DefaultTheme}>
-      <Tab.Navigator
+      <Tab.Navigator lazy={false}
         screenOptions={({ route }) => ({
           tabBarIcon: ({ focused, color, size }) => {
             let iconName;
             if (route.name === "Início") {
               iconName = focused ? "home" : "home-outline";
+            } else if (route.name === "Pesquisa") {
+              iconName = focused ? "search" : "search-outline";
             } else if (route.name === "Mapa") {
               iconName = focused ? "map" : "map-outline";
             }
@@ -45,6 +48,7 @@ const TabNavigator = () => {
         })}
       >
         <Tab.Screen name="Início" component={HomeScreen} />
+        <Tab.Screen name="Pesquisa" component={SearchScreen} />
         {isMobile && <Tab.Screen name="Mapa" component={MapScreen} />}
       </Tab.Navigator>
     </NavigationContainer>
