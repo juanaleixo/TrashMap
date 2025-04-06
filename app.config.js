@@ -1,7 +1,7 @@
 import "dotenv/config";
 
 export default {
-  name: "trashMap",
+  name: "TrashMap",
   slug: "trashmap",
   version: "0.0.1",
   orientation: "portrait",

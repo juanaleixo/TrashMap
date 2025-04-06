@@ -8,10 +8,12 @@ import {
   StyleSheet,
   useColorScheme, // ...novo import para modo escuro...
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { supabase } from "../lib/supabase";
 
 const SearchScreen = () => {
+  const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const [searchText, setSearchText] = useState("");
   const [results, setResults] = useState([]);
@@ -46,9 +48,22 @@ const SearchScreen = () => {
   };
 
   return (
-    <View style={[styles.container, isDarkMode && { backgroundColor: "#121212" }]}>
+    <View
+      style={[
+        styles.container,
+        { marginTop: insets.top },
+        isDarkMode && { backgroundColor: "#121212" },
+      ]}
+    >
       <TextInput
-        style={[styles.input, isDarkMode && { color: "white", borderColor: "#444", backgroundColor: "#333" }]}
+        style={[
+          styles.input,
+          isDarkMode && {
+            color: "white",
+            borderColor: "#444",
+            backgroundColor: "#333",
+          },
+        ]}
         placeholder="Pesquisar..."
         placeholderTextColor={isDarkMode ? "lightgray" : "gray"}
         value={searchText}
@@ -62,7 +77,9 @@ const SearchScreen = () => {
             style={styles.resultItem}
             onPress={() => handleResultPress(item)}
           >
-            <Text style={[styles.resultText, isDarkMode && { color: "white" }]}>{item.name}</Text>
+            <Text style={[styles.resultText, isDarkMode && { color: "white" }]}>
+              {item.name}
+            </Text>
           </TouchableOpacity>
         )}
       />
@@ -71,7 +88,7 @@ const SearchScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingTop: 50 },
+  container: { flex: 1 },
   input: {
     marginTop: 20,
     marginHorizontal: 20,

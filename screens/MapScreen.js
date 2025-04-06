@@ -4,7 +4,10 @@ import { StyleSheet, View, Text, TouchableOpacity } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { supabase } from "../lib/supabase";
 import * as Location from "expo-location";
-import BottomSheet, { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
+import BottomSheet, {
+  BottomSheetModal,
+  BottomSheetView,
+} from "@gorhom/bottom-sheet";
 import { useRoute } from "@react-navigation/native";
 import { useColorScheme } from "react-native";
 
@@ -78,7 +81,6 @@ export default function MapScreen() {
 
   const handleMarkerPress = (ponto) => {
     setSelectedPontoState(ponto);
-    bottomSheetRef.current?.expand();
     if (mapRef.current) {
       mapRef.current.animateToRegion(
         {
@@ -87,9 +89,10 @@ export default function MapScreen() {
           latitudeDelta: 0.01,
           longitudeDelta: 0.01,
         },
-        500 // Duração da animação
+        400 // Duração da animação
       );
     }
+    bottomSheetRef.current?.expand();
   };
 
   const handleClose = () => {
@@ -102,7 +105,7 @@ export default function MapScreen() {
           latitudeDelta: currentRegion.latitudeDelta,
           longitudeDelta: currentRegion.longitudeDelta,
         },
-        500 // Duração da animação
+        200 // Duração da animação
       );
     }
     setSelectedPontoState(null);
@@ -118,8 +121,9 @@ export default function MapScreen() {
         <MapView
           ref={mapRef}
           style={styles.map}
-                    showsUserLocation={true}
+          showsUserLocation={true}
           initialRegion={initialRegion}
+          moveOnMarkerPress={false}
           onRegionChangeComplete={(region) => setCurrentRegion(region)}
         >
           {pontos.map((ponto) => (
@@ -134,7 +138,7 @@ export default function MapScreen() {
           ))}
         </MapView>
       )}
-      
+
       <BottomSheet
         ref={bottomSheetRef}
         index={-1}
@@ -143,7 +147,8 @@ export default function MapScreen() {
         onClose={() => setSelectedPontoState(null)}
         backgroundStyle={{
           backgroundColor: isDarkMode ? "#333" : "#fff", // Ajusta a cor de fundo
-        }}>
+        }}
+      >
         <BottomSheetView>
           {selectedPontoState && (
             <View style={styles.sheetContent}>

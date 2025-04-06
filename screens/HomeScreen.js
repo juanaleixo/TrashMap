@@ -8,11 +8,13 @@ import {
   TouchableOpacity,
   FlatList,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { useDicaDoDia } from "../hooks/useDicaDoDia";
 import { useMateriais } from "../hooks/useMateriais";
 
 const HomeScreen = () => {
+  const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const colorScheme = useColorScheme();
   const isDarkMode = colorScheme === "dark";
@@ -24,7 +26,12 @@ const HomeScreen = () => {
   const { materiais, loading: loadingMateriais } = useMateriais();
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: bgColor }]}>
+    <ScrollView
+      style={[
+        styles.container,
+        { backgroundColor: bgColor, paddingTop: insets.top + 50 },
+      ]}
+    >
       <Text style={[styles.header, { color: textColor }]}>
         Olá, reciclador! ♻️
       </Text>
@@ -59,14 +66,14 @@ const HomeScreen = () => {
       </View>
 
       {/* Botão para Mapa */}
-        <TouchableOpacity
-          style={styles.mapButton}
-          onPress={() => navigation.navigate("Mapa")}
-        >
-          <Text style={styles.mapButtonText}>Ver Mapa de Coleta</Text>
-        </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.mapButton}
+        onPress={() => navigation.navigate("Mapa")}
+      >
+        <Text style={styles.mapButtonText}>Ver Mapa de Coleta</Text>
+      </TouchableOpacity>
 
-        {/* Materiais em Destaque */}
+      {/* Materiais em Destaque */}
       <View style={styles.section}>
         <Text style={[styles.sectionTitle, { color: textColor }]}>
           Materiais em Destaque
@@ -103,7 +110,6 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 110,
     paddingHorizontal: 20,
   },
   header: {
