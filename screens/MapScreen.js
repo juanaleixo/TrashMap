@@ -42,7 +42,8 @@ export default function MapScreen() {
         longitudeDelta: 0.0421,
       });
     } else {
-      console.log("Permissão de localização negada.");
+      alert("Permissão de localização negada.");
+      alert(status);
     }
   };
 
@@ -63,9 +64,15 @@ export default function MapScreen() {
   // Busca ao montar o componente
   useEffect(() => {
     const initialize = async () => {
-      await getUserLocation();
-      await fetchPontos();
-      showTrue();
+      try {
+        await fetchPontos();
+        await showTrue();
+        getUserLocation();
+      } catch (error) {
+        console.error("Erro durante a inicialização:", error);
+        console.error("Detalhes do erro:", error);
+        alert(error);
+      }
     };
     initialize();
   }, []);
