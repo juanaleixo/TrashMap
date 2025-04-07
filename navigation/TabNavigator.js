@@ -7,9 +7,10 @@ import {
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useColorScheme } from "react-native";
+import { useColorScheme, Platform } from "react-native";
 import HomeScreen from "../screens/HomeScreen";
 import MapScreen from "../screens/MapScreen";
+import SearchScreen from "../screens/SearchScreen";
 
 const Tab = createBottomTabNavigator();
 
@@ -17,15 +18,18 @@ const TabNavigator = () => {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
   const isDarkMode = colorScheme === "dark";
+  const isMobile = Platform.OS === "ios" || Platform.OS === "android";
 
   return (
     <NavigationContainer theme={isDarkMode ? DarkTheme : DefaultTheme}>
-      <Tab.Navigator
+      <Tab.Navigator lazy={false}
         screenOptions={({ route }) => ({
           tabBarIcon: ({ focused, color, size }) => {
             let iconName;
             if (route.name === "Início") {
               iconName = focused ? "home" : "home-outline";
+            } else if (route.name === "Pesquisa") {
+              iconName = focused ? "search" : "search-outline";
             } else if (route.name === "Mapa") {
               iconName = focused ? "map" : "map-outline";
             }
@@ -44,7 +48,8 @@ const TabNavigator = () => {
         })}
       >
         <Tab.Screen name="Início" component={HomeScreen} />
-        <Tab.Screen name="Mapa" component={MapScreen} />
+        <Tab.Screen name="Pesquisa" component={SearchScreen} />
+        {isMobile && <Tab.Screen name="Mapa" component={MapScreen} />}
       </Tab.Navigator>
     </NavigationContainer>
   );
