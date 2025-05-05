@@ -7,9 +7,7 @@ import { supabase } from "../lib/supabase";
 import * as Location from "expo-location";
 import { useColorScheme } from "react-native";
 
-MapboxGL.setAccessToken(
-  "pk.eyJ1IjoianVhbmFsZWl4byIsImEiOiJjbWFib3hkbGcyYmFzMmpvbzBjODB2emZhIn0.339xsyFz6f1ZlCUp2LCy-Q"
-);
+MapboxGL.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN);
 
 export default function MapScreen() {
   const [pontos, setPontos] = useState([]);
@@ -35,9 +33,7 @@ export default function MapScreen() {
       <MapboxGL.MapView
         style={styles.map}
         styleURL={
-          isDarkMode
-            ? MapboxGL.StyleURL.Dark
-            : MapboxGL.StyleURL.Street
+          isDarkMode ? MapboxGL.StyleURL.Dark : MapboxGL.StyleURL.Street
         }
       >
         {userLocation && (
