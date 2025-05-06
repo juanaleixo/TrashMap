@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { StyleSheet, View, Text, TouchableOpacity } from "react-native";
 import MapboxGL from "@rnmapbox/maps";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import BottomSheet from "@gorhom/bottom-sheet";
+import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { supabase } from "../lib/supabase";
 import * as Location from "expo-location";
 import { useColorScheme } from "react-native";
@@ -37,7 +37,12 @@ export default function MapScreen() {
         }
       >
         {userLocation && (
-          <MapboxGL.Camera zoomLevel={12} centerCoordinate={userLocation} />
+          <MapboxGL.Camera
+            zoomLevel={12}
+            animationMode="flyTo"
+            animationDuration={700}
+            centerCoordinate={userLocation}
+          />
         )}
         {pontos.map((p) => (
           <MapboxGL.PointAnnotation
@@ -45,36 +50,68 @@ export default function MapScreen() {
             id={String(p.id)}
             coordinate={[p.longitude, p.latitude]}
             onSelected={() => {
-              setSelectedPonto(p);
               bottomSheetRef.current?.expand();
+              setSelectedPonto(p);
+              setUserLocation([p.longitude, p.latitude]);
             }}
           >
             <View style={styles.marker} />
           </MapboxGL.PointAnnotation>
         ))}
       </MapboxGL.MapView>
+
       <BottomSheet
         ref={bottomSheetRef}
         index={-1}
-        snapPoints={["25%", "50%"]}
+        snapPoints={["10%", "25%"]}
         enablePanDownToClose
         backgroundStyle={{ backgroundColor: isDarkMode ? "#333" : "#fff" }}
       >
-        {selectedPonto && (
-          <View style={styles.sheet}>
-            <Text
-              style={[styles.title, { color: isDarkMode ? "#fff" : "#000" }]}
-            >
-              {selectedPonto.name}
-            </Text>
-            <Text style={{ color: isDarkMode ? "#ddd" : "#000" }}>
-              Materiais: {selectedPonto.accepted_materials?.join(", ") || "N/A"}
-            </Text>
-            <TouchableOpacity onPress={() => bottomSheetRef.current?.close()}>
-              <Text style={{ color: isDarkMode ? "#bbb" : "#667" }}>✕</Text>
-            </TouchableOpacity>
-          </View>
-        )}
+        <BottomSheetView>
+          {selectedPonto && (
+            <View style={{ padding: 20 }}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <Text
+                  style={[
+                    { fontSize: 18, fontWeight: "bold" },
+                    { color: isDarkMode ? "#fff" : "#000" },
+                  ]}
+                >
+                  {selectedPonto.name}
+                </Text>
+                <TouchableOpacity
+                  onPress={() => bottomSheetRef.current?.close()}
+                >
+                  <Text
+                    style={[
+                      { fontSize: 30 },
+                      { color: isDarkMode ? "#bbb" : "#667" },
+                    ]}
+                  >
+                    ✕
+                  </Text>
+                </TouchableOpacity>
+              </View>
+              <Text
+                style={[
+                  { fontSize: 16, marginTop: 10 },
+                  { color: isDarkMode ? "#ddd" : "#000" },
+                ]}
+              >
+                Materiais aceitos:{" "}
+                {selectedPonto.accepted_materials
+                  ? selectedPonto.accepted_materials.join(", ")
+                  : "N/A"}
+              </Text>
+            </View>
+          )}
+        </BottomSheetView>
       </BottomSheet>
     </GestureHandlerRootView>
   );
@@ -86,7 +123,7 @@ const styles = StyleSheet.create({
   marker: {
     width: 20,
     height: 20,
-    borderRadius: 10,
+    borderRadius: 30,
     backgroundColor: "#219653",
     borderWidth: 2,
     borderColor: "#fff",

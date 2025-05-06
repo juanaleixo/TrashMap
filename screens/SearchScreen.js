@@ -44,7 +44,7 @@ const SearchScreen = () => {
 
   const handleResultPress = (item) => {
     // Navega para o MapScreen passando o ponto selecionado
-    navigation.navigate("Mapa", { selectedPonto: item, centerOnPonto: true });
+    navigation.navigate("Mapa", { selectedPonto: item });
   };
 
   return (
