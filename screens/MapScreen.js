@@ -19,7 +19,7 @@ export default function MapScreen() {
   const [selectedPonto, setSelectedPonto] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
   const bottomSheetRef = useRef(null);
-  const mapRef = useRef(null);
+  const cameraRef = useRef(null);
   const isDarkMode = useColorScheme() === "dark";
 
   useEffect(() => {
@@ -27,7 +27,15 @@ export default function MapScreen() {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status === "granted") {
         const location = await Location.getCurrentPositionAsync({});
-        setUserLocation([location.coords.longitude, location.coords.latitude]);
+        cameraRef.current?.setCamera({
+          centerCoordinate: [
+            location.coords.longitude,
+            location.coords.latitude,
+          ],
+          animationMode: "flyTo",
+          zoomLevel: 12,
+          animationDuration: 1000,
+        });
       }
       const { data } = await supabase.rpc("listar_pontos_mapa");
       setPontos(data || []);
@@ -43,8 +51,6 @@ export default function MapScreen() {
       }, 200);
     }
   }, [selectedPontoSearch]);
-
-  const cameraRef = useRef(null);
 
   const handleMarkerPress = (ponto) => {
     setSelectedPonto(ponto);
@@ -65,16 +71,9 @@ export default function MapScreen() {
         styleURL={
           isDarkMode ? MapboxGL.StyleURL.Dark : MapboxGL.StyleURL.Street
         }
+        logoEnabled={false}
       >
-        {userLocation && (
-          <MapboxGL.Camera
-            ref={cameraRef}
-            zoomLevel={12}
-            animationMode="flyTo"
-            animationDuration={700}
-            centerCoordinate={userLocation}
-          />
-        )}
+        <MapboxGL.Camera ref={cameraRef} />
         {pontos.map((p) => (
           <MapboxGL.PointAnnotation
             key={p.id}
