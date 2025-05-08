@@ -6,14 +6,20 @@ import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { supabase } from "../lib/supabase";
 import * as Location from "expo-location";
 import { useColorScheme } from "react-native";
+import { useRoute } from "@react-navigation/native";
 
 MapboxGL.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN);
 
 export default function MapScreen() {
+  const route = useRoute();
+
+  const { selectedPontoSearch } = route.params || {};
+
   const [pontos, setPontos] = useState([]);
   const [selectedPonto, setSelectedPonto] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
   const bottomSheetRef = useRef(null);
+  const mapRef = useRef(null);
   const isDarkMode = useColorScheme() === "dark";
 
   useEffect(() => {
@@ -28,6 +34,30 @@ export default function MapScreen() {
     })();
   }, []);
 
+  // Atualiza o estado com os parâmetros recebidos para centralizar o mapa
+  useEffect(() => {
+    if (selectedPontoSearch) {
+      setSelectedPonto(selectedPontoSearch);
+      setTimeout(() => {
+        handleMarkerPress(selectedPontoSearch);
+      }, 200);
+    }
+  }, [selectedPontoSearch]);
+
+  const cameraRef = useRef(null);
+
+  const handleMarkerPress = (ponto) => {
+    setSelectedPonto(ponto);
+    if (cameraRef.current) {
+      cameraRef.current.setCamera({
+        centerCoordinate: [ponto.longitude, ponto.latitude - 0.005],
+        zoomLevel: 12,
+        animationDuration: 500,
+      });
+    }
+    bottomSheetRef.current?.expand();
+  };
+
   return (
     <GestureHandlerRootView style={styles.container}>
       <MapboxGL.MapView
@@ -38,6 +68,7 @@ export default function MapScreen() {
       >
         {userLocation && (
           <MapboxGL.Camera
+            ref={cameraRef}
             zoomLevel={12}
             animationMode="flyTo"
             animationDuration={700}
@@ -50,9 +81,7 @@ export default function MapScreen() {
             id={String(p.id)}
             coordinate={[p.longitude, p.latitude]}
             onSelected={() => {
-              bottomSheetRef.current?.expand();
-              setSelectedPonto(p);
-              setUserLocation([p.longitude, p.latitude]);
+              handleMarkerPress(p);
             }}
           >
             <View style={styles.marker} />
