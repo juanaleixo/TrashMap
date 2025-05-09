@@ -84,19 +84,28 @@ const HomeScreen = () => {
           </Text>
         ) : (
           <FlatList
-            data={materiais.slice(0, 5)}
-            renderItem={({ item }) => (
-              <View
-                style={[styles.materialCard, { backgroundColor: cardColor }]}
-              >
-                <Text style={[styles.materialTitle, { color: textColor }]}>
-                  {item.name}
-                </Text>
-                <Text style={[styles.materialInfo, { color: textColor }]}>
-                  {item.decomposition_time || "Tempo não informado"}
-                </Text>
-              </View>
-            )}
+            data={materiais.slice(0, 20)}
+            renderItem={({ item }) => {
+              return (
+                <View
+                  style={[
+                    styles.materialCard,
+                    { backgroundColor: item.color || cardColor },
+                  ]}
+                >
+                  <Text
+                    style={[styles.materialTitle, { color: item.textColor }]}
+                  >
+                    {item.name}
+                  </Text>
+                  <Text
+                    style={[styles.materialInfo, { color: item.textColor }]}
+                  >
+                    {item.decomposition_time || "Tempo não informado"}
+                  </Text>
+                </View>
+              );
+            }}
             keyExtractor={(item) => item.id}
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -146,14 +155,21 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 16,
     marginRight: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
   },
   materialTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
+    fontSize: 16,
+    fontWeight: "600",
     marginBottom: 4,
   },
   materialInfo: {
-    fontSize: 14,
+    fontSize: 13,
+    color: "#444",
+    opacity: 0.9,
   },
 });
 
