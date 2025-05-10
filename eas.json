@@ -8,16 +8,19 @@
       "ios": {
         "simulator": true
       },
-      "android": {
-        "distribution": "internal"
-      },
+      "distribution": "internal",
       "developmentClient": true
     },
     "development": {
-      "developmentClient": false,
-      "distribution": "internal"
+      "ios": {
+        "simulator": true
+      },
+      "distribution": "internal",
+      "developmentClient": false
     },
     "production": {
+      "distribution": "internal",
+      "developmentClient": false,
       "autoIncrement": false
     }
   },
