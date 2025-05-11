@@ -1,7 +1,7 @@
 export default {
   name: "TrashMap",
   slug: "trashmap",
-  version: "0.0.2",
+  version: "0.0.3",
   newArchitecture: true,
   orientation: "portrait",
   userInterfaceStyle: "automatic",

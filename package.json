@@ -1,6 +1,5 @@
 {
   "name": "trashmap",
-  "version": "0.0.2",
   "scripts": {
     "start": "expo start --dev-client",
     "android": "expo run:android",
