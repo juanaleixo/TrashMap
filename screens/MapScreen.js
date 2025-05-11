@@ -18,6 +18,8 @@ import { supabase } from "../lib/supabase";
 import * as Location from "expo-location";
 import { useColorScheme } from "react-native";
 import { useRoute } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import NetInfo from "@react-native-community/netinfo";
 
 MapboxGL.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN);
 
@@ -40,8 +42,32 @@ export default function MapScreen() {
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase.rpc("listar_pontos_mapa");
-      setPontos(data || []);
+      try {
+        const cached = await AsyncStorage.getItem("pontos_cache");
+        if (cached) {
+          setPontos(JSON.parse(cached));
+        }
+      } catch (e) {
+        console.warn("Falha ao ler cache de pontos:", e);
+      }
+
+      // 2️⃣  Verifica conectividade
+      const netState = await NetInfo.fetch();
+
+      if (netState.isConnected) {
+        // Tem internet → busca dados atualizados
+        const { data } = await supabase.rpc("listar_pontos_mapa");
+        if (data) {
+          setPontos(data);
+          try {
+            await AsyncStorage.setItem("pontos_cache", JSON.stringify(data));
+          } catch (e) {
+            console.warn("Falha ao salvar cache:", e);
+          }
+        }
+      }
+
+      // 3️⃣  Define a posição inicial da câmera
       const { status } = await Location.getForegroundPermissionsAsync();
       if (status === "granted") {
         const location =
