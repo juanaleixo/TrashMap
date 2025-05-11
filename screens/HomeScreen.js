@@ -152,14 +152,9 @@ const styles = StyleSheet.create({
   },
   materialCard: {
     width: 160,
-    padding: 16,
+    padding: 12,
     borderRadius: 16,
     marginRight: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
   },
   materialTitle: {
     fontSize: 16,

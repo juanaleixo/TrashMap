@@ -1,8 +1,19 @@
 import React, { useEffect, useRef, useState } from "react";
-import { StyleSheet, View, Text, TouchableOpacity } from "react-native";
+import {
+  StyleSheet,
+  View,
+  Text,
+  TouchableOpacity,
+  Dimensions,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import MapboxGL from "@rnmapbox/maps";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+} from "react-native-reanimated";
 import { supabase } from "../lib/supabase";
 import * as Location from "expo-location";
 import { useColorScheme } from "react-native";
@@ -20,13 +31,22 @@ export default function MapScreen() {
   const [userLocation, setUserLocation] = useState(null);
   const bottomSheetRef = useRef(null);
   const cameraRef = useRef(null);
+  const insets = useSafeAreaInsets();
   const isDarkMode = useColorScheme() === "dark";
+
+  const animatedIndex = useSharedValue(-1);
+  const animatedPosition = useSharedValue(0);
+  const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
   useEffect(() => {
     (async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
+      const { data } = await supabase.rpc("listar_pontos_mapa");
+      setPontos(data || []);
+      const { status } = await Location.getForegroundPermissionsAsync();
       if (status === "granted") {
-        const location = await Location.getCurrentPositionAsync({});
+        const location =
+          (await Location.getLastKnownPositionAsync()) ||
+          (await Location.getCurrentPositionAsync({}));
         cameraRef.current?.setCamera({
           centerCoordinate: [
             location.coords.longitude,
@@ -37,8 +57,6 @@ export default function MapScreen() {
           animationDuration: 1000,
         });
       }
-      const { data } = await supabase.rpc("listar_pontos_mapa");
-      setPontos(data || []);
     })();
   }, []);
 
@@ -56,37 +74,57 @@ export default function MapScreen() {
     setSelectedPonto(ponto);
     if (cameraRef.current) {
       cameraRef.current.setCamera({
-        centerCoordinate: [ponto.longitude, ponto.latitude - 0.005],
+        centerCoordinate: [ponto.longitude, ponto.latitude],
         zoomLevel: 12,
-        animationDuration: 500,
+        animationDuration: 200,
       });
     }
     bottomSheetRef.current?.expand();
   };
 
+  const animatedMapStyle = useAnimatedStyle(() => {
+    const bottomOffset = Math.max(
+      0,
+      SCREEN_HEIGHT - animatedPosition.value - 60 - insets.bottom
+    );
+    return {
+      marginBottom: bottomOffset,
+    };
+  });
+
   return (
     <GestureHandlerRootView style={styles.container}>
-      <MapboxGL.MapView
-        style={styles.map}
-        styleURL={
-          isDarkMode ? MapboxGL.StyleURL.Dark : MapboxGL.StyleURL.Street
-        }
-        logoEnabled={false}
-      >
-        <MapboxGL.Camera ref={cameraRef} />
-        {pontos.map((p) => (
-          <MapboxGL.PointAnnotation
-            key={p.id}
-            id={String(p.id)}
-            coordinate={[p.longitude, p.latitude]}
-            onSelected={() => {
-              handleMarkerPress(p);
-            }}
-          >
-            <View style={styles.marker} />
-          </MapboxGL.PointAnnotation>
-        ))}
-      </MapboxGL.MapView>
+      <Animated.View style={[styles.map, animatedMapStyle]}>
+        <MapboxGL.MapView
+          style={StyleSheet.absoluteFill}
+          styleURL={
+            isDarkMode ? MapboxGL.StyleURL.Dark : MapboxGL.StyleURL.Street
+          }
+          logoEnabled={false}
+          attributionEnabled={false}
+          onPress={() => {
+            bottomSheetRef.current?.close();
+            setSelectedPonto(null);
+          }}
+        >
+          <MapboxGL.Camera
+            centerCoordinate={[-51.9253, -14.235]}
+            ref={cameraRef}
+          />
+          {pontos.map((p) => (
+            <MapboxGL.PointAnnotation
+              key={p.id}
+              id={String(p.id)}
+              coordinate={[p.longitude, p.latitude]}
+              onSelected={() => {
+                handleMarkerPress(p);
+              }}
+            >
+              <View style={styles.marker} />
+            </MapboxGL.PointAnnotation>
+          ))}
+        </MapboxGL.MapView>
+      </Animated.View>
 
       <BottomSheet
         ref={bottomSheetRef}
@@ -94,6 +132,8 @@ export default function MapScreen() {
         snapPoints={["10%", "25%"]}
         enablePanDownToClose
         backgroundStyle={{ backgroundColor: isDarkMode ? "#333" : "#fff" }}
+        animatedIndex={animatedIndex}
+        animatedPosition={animatedPosition}
       >
         <BottomSheetView>
           {selectedPonto && (
@@ -149,8 +189,8 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   map: { flex: 1 },
   marker: {
-    width: 20,
-    height: 20,
+    width: 25,
+    height: 25,
     borderRadius: 30,
     backgroundColor: "#219653",
     borderWidth: 2,

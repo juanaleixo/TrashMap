@@ -3,14 +3,13 @@ import {
   View,
   Text,
   TextInput,
-  FlatList,
   TouchableOpacity,
   StyleSheet,
   useColorScheme,
   TouchableWithoutFeedback,
   Keyboard,
 } from "react-native";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { GestureHandlerRootView, FlatList } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { supabase } from "../lib/supabase";
@@ -122,7 +121,7 @@ const SearchScreen = () => {
             <TouchableOpacity
               style={{
                 marginLeft: 10,
-                padding: 6,
+                padding: 10,
                 borderRadius: 8,
                 backgroundColor: isDarkMode ? "#222" : "#eee",
               }}
@@ -166,7 +165,7 @@ const SearchScreen = () => {
       <BottomSheet
         ref={bottomSheetRef}
         index={-1}
-        snapPoints={["10%", "25%"]}
+        snapPoints={["10%", "20%"]}
         enablePanDownToClose
         backgroundStyle={{ backgroundColor: isDarkMode ? "#333" : "#fff" }}
       >
@@ -225,13 +224,14 @@ const SearchScreen = () => {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   input: {
-    marginTop: 20,
-    marginHorizontal: 20,
-    height: 30,
-    borderColor: "gray",
-    borderWidth: 2,
-    paddingHorizontal: 15,
-    borderRadius: 10,
+    height: 40,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+    size: 16,
+    backgroundColor: "#fff",
+    color: "#000",
+    textAlignVertical: "center",
   },
   resultItem: {
     padding: 10,
@@ -244,18 +244,12 @@ const styles = StyleSheet.create({
   },
   materialCard: {
     width: 160,
-    padding: 16,
+    padding: 12,
     borderRadius: 16,
     marginRight: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
   },
   materialCardSelected: {
     opacity: 0.85,
-    elevation: 4,
   },
   checkContainer: {
     position: "absolute",
