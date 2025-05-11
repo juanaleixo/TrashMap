@@ -1,9 +1,7 @@
-import "dotenv/config";
-
 export default {
   name: "TrashMap",
   slug: "trashmap",
-  version: "0.0.1",
+  version: "0.0.3",
   newArchitecture: true,
   orientation: "portrait",
   userInterfaceStyle: "automatic",
@@ -38,5 +36,17 @@ export default {
       projectId: "fc4b1265-c01e-48dd-91ae-3c2f2191d157",
     },
   },
+  plugins: [
+    [
+      "expo-build-properties",
+      {
+        android: {
+          extraMavenRepos: [
+            "https://api.mapbox.com/downloads/v2/releases/maven",
+          ],
+        },
+      },
+    ],
+  ],
   owner: "juanaleixo",
 };
