@@ -20,6 +20,7 @@ import { useColorScheme } from "react-native";
 import { useRoute } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import NetInfo from "@react-native-community/netinfo";
+import { Ionicons } from "@expo/vector-icons";
 
 MapboxGL.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN);
 
@@ -51,7 +52,7 @@ export default function MapScreen() {
         console.warn("Falha ao ler cache de pontos:", e);
       }
 
-      // 2️⃣  Verifica conectividade
+      // Verifica conectividade
       const netState = await NetInfo.fetch();
 
       if (netState.isConnected) {
@@ -67,22 +68,7 @@ export default function MapScreen() {
         }
       }
 
-      // 3️⃣  Define a posição inicial da câmera
-      const { status } = await Location.getForegroundPermissionsAsync();
-      if (status === "granted") {
-        const location =
-          (await Location.getLastKnownPositionAsync()) ||
-          (await Location.getCurrentPositionAsync({}));
-        cameraRef.current?.setCamera({
-          centerCoordinate: [
-            location.coords.longitude,
-            location.coords.latitude,
-          ],
-          animationMode: "flyTo",
-          zoomLevel: 12,
-          animationDuration: 1000,
-        });
-      }
+      centerOnUserLocation();
     })();
   }, []);
 
@@ -108,6 +94,28 @@ export default function MapScreen() {
     bottomSheetRef.current?.expand();
   };
 
+  const centerOnUserLocation = async () => {
+    try {
+      const { status } = await Location.getForegroundPermissionsAsync();
+      if (status === "granted") {
+        const location =
+          (await Location.getLastKnownPositionAsync()) ||
+          (await Location.getCurrentPositionAsync({}));
+        cameraRef.current?.setCamera({
+          centerCoordinate: [
+            location.coords.longitude,
+            location.coords.latitude,
+          ],
+          animationMode: "flyTo",
+          zoomLevel: 12,
+          animationDuration: 1000,
+        });
+      }
+    } catch (error) {
+      console.warn("Erro ao centralizar no usuário:", error);
+    }
+  };
+
   const animatedMapStyle = useAnimatedStyle(() => {
     const bottomOffset = Math.max(
       0,
@@ -128,6 +136,7 @@ export default function MapScreen() {
           }
           logoEnabled={false}
           attributionEnabled={false}
+          scaleBarEnabled={false}
           onPress={() => {
             bottomSheetRef.current?.close();
             setSelectedPonto(null);
@@ -137,6 +146,7 @@ export default function MapScreen() {
             centerCoordinate={[-51.9253, -14.235]}
             ref={cameraRef}
           />
+          <MapboxGL.UserLocation visible={true} />
           {pontos.map((p) => (
             <MapboxGL.PointAnnotation
               key={p.id}
@@ -207,6 +217,23 @@ export default function MapScreen() {
           )}
         </BottomSheetView>
       </BottomSheet>
+      <TouchableOpacity
+        style={[
+          styles.locationButton,
+          {
+            backgroundColor: isDarkMode ? "#219653" : "#fff",
+            borderColor: isDarkMode ? "#fff" : "#219653",
+          },
+        ]}
+        onPress={centerOnUserLocation}
+        activeOpacity={0.8}
+      >
+        <Ionicons
+          name="locate-outline"
+          size={24}
+          color={isDarkMode ? "#fff" : "#219653"}
+        />
+      </TouchableOpacity>
     </GestureHandlerRootView>
   );
 }
@@ -224,4 +251,15 @@ const styles = StyleSheet.create({
   },
   sheet: { padding: 20 },
   title: { fontSize: 18, fontWeight: "bold" },
+  locationButton: {
+    position: "absolute",
+    bottom: 30,
+    right: 20,
+    borderWidth: 2,
+    borderRadius: 25,
+    width: 50,
+    height: 50,
+    alignItems: "center",
+    justifyContent: "center",
+  },
 });
