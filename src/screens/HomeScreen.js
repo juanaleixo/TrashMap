@@ -9,11 +9,12 @@ import {
   FlatList,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import NetInfo from "@react-native-community/netinfo";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { useDicaDoDia } from "../hooks/useDicaDoDia";
 import { useMateriais } from "../hooks/useMateriais";
+
+import { useAuth } from "../context/AuthContext";
 
 const HomeScreen = () => {
   const insets = useSafeAreaInsets();
@@ -23,6 +24,9 @@ const HomeScreen = () => {
   const bgColor = isDarkMode ? "#000" : "#fff";
   const textColor = isDarkMode ? "#fff" : "#000";
   const cardColor = isDarkMode ? "#1a1a1a" : "#f2f2f2";
+
+  const { user } = useAuth();
+  const firstName = user?.displayName?.split(" ")[0] || "reciclador";
 
   // ↔️  Cache states
   const [materiaisData, setMateriaisData] = useState([]);
@@ -52,7 +56,9 @@ const HomeScreen = () => {
   useEffect(() => {
     if (!loadingMateriais && materiais.length) {
       setMateriaisData(materiais);
-      AsyncStorage.setItem("materiais_cache", JSON.stringify(materiais)).catch(console.warn);
+      AsyncStorage.setItem("materiais_cache", JSON.stringify(materiais)).catch(
+        console.warn
+      );
     }
   }, [loadingMateriais, materiais]);
 
@@ -71,7 +77,7 @@ const HomeScreen = () => {
       ]}
     >
       <Text style={[styles.header, { color: textColor }]}>
-        Olá, reciclador! ♻️
+        Olá, {firstName}! ♻️
       </Text>
 
       {/* Bloco de Impacto */}
@@ -92,7 +98,7 @@ const HomeScreen = () => {
         <Text style={[styles.sectionTitle, { color: textColor }]}>
           Dica do Dia 📚
         </Text>
-        {(!cacheLoaded && loadingDica) ? (
+        {!cacheLoaded && loadingDica ? (
           <Text style={[styles.sectionText, { color: textColor }]}>
             Carregando...
           </Text>
@@ -116,7 +122,7 @@ const HomeScreen = () => {
         <Text style={[styles.sectionTitle, { color: textColor }]}>
           Materiais em Destaque
         </Text>
-        {(!cacheLoaded && loadingMateriais && !materiaisData.length) ? (
+        {!cacheLoaded && loadingMateriais && !materiaisData.length ? (
           <Text style={[styles.sectionText, { color: textColor }]}>
             Carregando materiais...
           </Text>
@@ -130,14 +136,10 @@ const HomeScreen = () => {
                   { backgroundColor: item.color || cardColor },
                 ]}
               >
-                <Text
-                  style={[styles.materialTitle, { color: item.textColor }]}
-                >
+                <Text style={[styles.materialTitle, { color: item.textColor }]}>
                   {item.name}
                 </Text>
-                <Text
-                  style={[styles.materialInfo, { color: item.textColor }]}
-                >
+                <Text style={[styles.materialInfo, { color: item.textColor }]}>
                   {item.decomposition_time || "Tempo não informado"}
                 </Text>
               </View>

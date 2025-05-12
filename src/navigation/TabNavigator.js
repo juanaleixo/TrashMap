@@ -22,7 +22,8 @@ const TabNavigator = () => {
 
   return (
     <NavigationContainer theme={isDarkMode ? DarkTheme : DefaultTheme}>
-      <Tab.Navigator lazy={false}
+      <Tab.Navigator
+        lazy={false}
         screenOptions={({ route }) => ({
           tabBarIcon: ({ focused, color, size }) => {
             let iconName;
