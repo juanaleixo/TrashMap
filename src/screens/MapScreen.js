@@ -242,8 +242,8 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   map: { flex: 1 },
   marker: {
-    width: 25,
-    height: 25,
+    width: 20,
+    height: 20,
     borderRadius: 30,
     backgroundColor: "#219653",
     borderWidth: 2,
