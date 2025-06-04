@@ -11,6 +11,7 @@ import { useColorScheme, Platform } from "react-native";
 import HomeScreen from "../screens/HomeScreen";
 import MapScreen from "../screens/MapScreen";
 import SearchScreen from "../screens/SearchScreen";
+import UserScreen from "../screens/UserScreen";
 
 const Tab = createBottomTabNavigator();
 
@@ -33,6 +34,8 @@ const TabNavigator = () => {
               iconName = focused ? "search" : "search-outline";
             } else if (route.name === "Mapa") {
               iconName = focused ? "map" : "map-outline";
+            } else if (route.name === "Perfil") {
+              iconName = focused ? "person" : "person-outline";
             }
             return <Ionicons name={iconName} size={size} color={color} />;
           },
@@ -50,7 +53,8 @@ const TabNavigator = () => {
       >
         <Tab.Screen name="Início" component={HomeScreen} />
         <Tab.Screen name="Pesquisa" component={SearchScreen} />
-        {isMobile && <Tab.Screen name="Mapa" component={MapScreen} />}
+        <Tab.Screen name="Mapa" component={MapScreen} />
+        <Tab.Screen name="Perfil" component={UserScreen} />
       </Tab.Navigator>
     </NavigationContainer>
   );
