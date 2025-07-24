@@ -1,12 +1,11 @@
 import { View, Button } from "react-native";
-import {
-  GoogleAuthProvider,
-  signInWithCredential,
-  getAuth,
-} from "firebase/auth";
 import * as Google from "expo-auth-session/providers/google";
 import { makeRedirectUri } from "expo-auth-session";
+import * as WebBrowser from "expo-web-browser";
 import { useEffect } from "react";
+import { supabase } from "../lib/supabase";
+
+WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen() {
   const redirectUri = makeRedirectUri({
@@ -22,10 +21,14 @@ export default function LoginScreen() {
 
   useEffect(() => {
     if (response?.type === "success") {
-      const { id_token } = response.params;
-      const auth = getAuth();
-      const credential = GoogleAuthProvider.credential(id_token);
-      signInWithCredential(auth, credential).catch(console.error);
+      const { id_token, access_token } = response.params;
+      supabase.auth
+        .signInWithIdToken({
+          provider: "google",
+          token: id_token,
+          access_token,
+        })
+        .catch(console.error);
     }
   }, [response]);
 
