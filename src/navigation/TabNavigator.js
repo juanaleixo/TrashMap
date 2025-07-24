@@ -6,14 +6,26 @@ import {
 } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
+import { View, TouchableOpacity, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColorScheme, Platform } from "react-native";
 import HomeScreen from "../screens/HomeScreen";
 import MapScreen from "../screens/MapScreen";
 import SearchScreen from "../screens/SearchScreen";
 import UserScreen from "../screens/UserScreen";
+import AddScreen from "../screens/AddScreen";
 
 const Tab = createBottomTabNavigator();
+
+const CustomAddButton = ({ children, onPress }) => (
+  <TouchableOpacity
+    style={styles.addButtonContainer}
+    activeOpacity={0.8}
+    onPress={onPress}
+  >
+    <View style={styles.addButton}>{children}</View>
+  </TouchableOpacity>
+);
 
 const TabNavigator = () => {
   const insets = useSafeAreaInsets();
@@ -36,6 +48,15 @@ const TabNavigator = () => {
               iconName = focused ? "map" : "map-outline";
             } else if (route.name === "Perfil") {
               iconName = focused ? "person" : "person-outline";
+            } else if (route.name === "Adicionar") {
+              return (
+                <Ionicons
+                  name="add"
+                  size={36}
+                  color="#fff"
+                  style={{}}
+                />
+              );
             }
             return <Ionicons name={iconName} size={size} color={color} />;
           },
@@ -53,11 +74,44 @@ const TabNavigator = () => {
       >
         <Tab.Screen name="Início" component={HomeScreen} />
         <Tab.Screen name="Pesquisa" component={SearchScreen} />
+        <Tab.Screen
+          name="Adicionar"
+          component={AddScreen}
+          options={{
+            tabBarLabel: "",
+            tabBarButton: (props) => (
+              <CustomAddButton {...props}>
+                <Ionicons name="add" size={36} color="#fff" />
+              </CustomAddButton>
+            ),
+          }}
+        />
         <Tab.Screen name="Mapa" component={MapScreen} />
         <Tab.Screen name="Perfil" component={UserScreen} />
       </Tab.Navigator>
     </NavigationContainer>
   );
 };
+
+const styles = StyleSheet.create({
+  addButtonContainer: {
+    top: -20,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  addButton: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: "#1E90FF",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8,
+  },
+});
 
 export default TabNavigator;

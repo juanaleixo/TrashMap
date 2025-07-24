@@ -24,6 +24,7 @@ const SearchScreen = () => {
   const [results, setResults] = useState([]);
   const colorScheme = useColorScheme();
   const isDarkMode = colorScheme === "dark";
+  const cardColor = isDarkMode ? "#1a1a1a" : "#f2f2f2";
 
   const [showFilter, setShowFilter] = useState(false);
   const bottomSheetRef = useRef(null);
