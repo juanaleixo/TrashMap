@@ -7,6 +7,7 @@ import {
 import * as Google from "expo-auth-session/providers/google";
 import { makeRedirectUri } from "expo-auth-session";
 import { useEffect } from "react";
+import { supabase } from "../lib/supabase";
 
 export default function LoginScreen() {
   const redirectUri = makeRedirectUri({
@@ -26,6 +27,9 @@ export default function LoginScreen() {
       const auth = getAuth();
       const credential = GoogleAuthProvider.credential(id_token);
       signInWithCredential(auth, credential).catch(console.error);
+      supabase.auth
+        .signInWithIdToken({ provider: "google", token: id_token })
+        .catch(console.error);
     }
   }, [response]);
 

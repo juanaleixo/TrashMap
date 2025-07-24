@@ -11,7 +11,7 @@ export const useMateriais = () => {
         .from("materials")
         .select("*")
         .order("created_at", { ascending: true });
-        
+
       const getTextColor = (bgColor) => {
         if (!bgColor || !bgColor.startsWith("#")) return "#000";
         const color = bgColor.replace("#", "");

@@ -6,6 +6,7 @@ import {
   onAuthStateChanged,
   signOut,
 } from "firebase/auth";
+import { supabase } from "../lib/supabase";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const firebaseConfig = {
@@ -31,13 +32,19 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      if (firebaseUser === null) {
+        supabase.auth.signOut().catch(console.error);
+      }
       setUser(firebaseUser || null);
       setLoading(false);
     });
     return unsubscribe;
   }, []);
 
-  const logout = () => signOut(auth);
+  const logout = async () => {
+    await signOut(auth);
+    await supabase.auth.signOut().catch(console.error);
+  };
 
   return (
     <AuthContext.Provider value={{ user, loading, logout }}>
