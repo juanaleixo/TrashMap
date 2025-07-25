@@ -119,7 +119,7 @@ export default function MapScreen() {
   const animatedMapStyle = useAnimatedStyle(() => {
     const bottomOffset = Math.max(
       0,
-      SCREEN_HEIGHT - animatedPosition.value - 60 - insets.bottom
+      SCREEN_HEIGHT - animatedPosition.value - 60 - insets.bottom,
     );
     return {
       marginBottom: bottomOffset,

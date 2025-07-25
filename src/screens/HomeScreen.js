@@ -26,7 +26,9 @@ const HomeScreen = () => {
   const cardColor = isDarkMode ? "#1a1a1a" : "#f2f2f2";
 
   const { user } = useAuth();
-  const firstName = user?.displayName?.split(" ")[0] || "reciclador";
+  const fullName =
+    user?.user_metadata?.full_name || user?.email || "reciclador";
+  const firstName = fullName.split(" ")[0];
 
   // ↔️  Cache states
   const [materiaisData, setMateriaisData] = useState([]);
@@ -57,7 +59,7 @@ const HomeScreen = () => {
     if (!loadingMateriais && materiais.length) {
       setMateriaisData(materiais);
       AsyncStorage.setItem("materiais_cache", JSON.stringify(materiais)).catch(
-        console.warn
+        console.warn,
       );
     }
   }, [loadingMateriais, materiais]);
