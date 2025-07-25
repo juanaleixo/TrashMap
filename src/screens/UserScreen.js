@@ -1,21 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, Button, ActivityIndicator } from 'react-native';
-import { getAuth } from 'firebase/auth';
 import { useColorScheme } from 'react-native';
+import { useAuth } from '../context/AuthContext';
 
 export default function UserScreen() {
-    const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const { user, loading, logout } = useAuth();
     const dynamicStyles = useUserScreenStyles();
-
-    useEffect(() => {
-        const auth = getAuth();
-        const unsubscribe = auth.onAuthStateChanged((currentUser) => {
-            setUser(currentUser);
-            setLoading(false);
-        });
-        return unsubscribe;
-    }, []);
 
     if (loading) {
         return (
@@ -36,19 +26,12 @@ export default function UserScreen() {
     return (
         <View style={dynamicStyles.container}>
             <Text style={dynamicStyles.title}>Usuário</Text>
-            <Text style={dynamicStyles.text}>Nome: {user.displayName || 'Não informado'}</Text>
+            <Text style={dynamicStyles.text}>Nome: {user.user_metadata?.full_name || 'Não informado'}</Text>
             <Text style={dynamicStyles.text}>Email: {user.email || 'Não informado'}</Text>
             <View style={{ marginTop: 24 }}>
                 <Button
                     title="Logout"
-                    onPress={async () => {
-                        const auth = getAuth();
-                        try {
-                            await auth.signOut();
-                        } catch (error) {
-                            // Trate o erro se necessário
-                        }
-                    }}
+                    onPress={logout}
                 />
             </View>
         </View>

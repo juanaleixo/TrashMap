@@ -23,7 +23,7 @@ We are actively working to launch the first version of TrashMap! Stay tuned for 
 ## 📲 Technologies Used
 
 - React Native
-- Firebase
+- Supabase
 - Expo
 - Geolocation
 

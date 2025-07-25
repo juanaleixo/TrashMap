@@ -26,7 +26,8 @@ const HomeScreen = () => {
   const cardColor = isDarkMode ? "#1a1a1a" : "#f2f2f2";
 
   const { user } = useAuth();
-  const firstName = user?.displayName?.split(" ")[0] || "reciclador";
+  const firstName =
+    user?.user_metadata?.full_name?.split(" ")[0] || "reciclador";
 
   // ↔️  Cache states
   const [materiaisData, setMateriaisData] = useState([]);
