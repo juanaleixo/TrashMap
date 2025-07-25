@@ -1,37 +1,35 @@
-import { View, Button } from "react-native";
-import {
-  GoogleAuthProvider,
-  signInWithCredential,
-  getAuth,
-} from "firebase/auth";
-import * as Google from "expo-auth-session/providers/google";
-import { makeRedirectUri } from "expo-auth-session";
 import { useEffect } from "react";
+import { View, Button } from "react-native";
+import * as WebBrowser from "expo-web-browser";
+import * as Linking from "expo-linking";
+import { supabase } from "../lib/supabase";
 
 export default function LoginScreen() {
-  const redirectUri = makeRedirectUri({
-    native: "com.juanaleixo.trashmap:/oauthredirect",
-  });
+  WebBrowser.maybeCompleteAuthSession();
 
-  const [request, response, promptAsync] = Google.useAuthRequest({
-    expoClientId: process.env.EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID,
-    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
-    androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
-    redirectUri,
-  });
+  const redirectTo = Linking.createURL("/auth/callback");
+
+  async function signInWithGoogle() {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo },
+    });
+    if (error) return console.error(error);
+
+    await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
+  }
 
   useEffect(() => {
-    if (response?.type === "success") {
-      const { id_token } = response.params;
-      const auth = getAuth();
-      const credential = GoogleAuthProvider.credential(id_token);
-      signInWithCredential(auth, credential).catch(console.error);
-    }
-  }, [response]);
+    const sub = Linking.addEventListener("url", async ({ url }) => {
+      const { error } = await supabase.auth.handleRedirectURL(url);
+      if (error) console.error(error);
+    });
+    return () => sub.remove();
+  }, []);
 
   return (
     <View style={{ flex: 1, justifyContent: "center", padding: 20 }}>
-      <Button title="Entrar com Google" onPress={() => promptAsync()} />
+      <Button title="Entrar com Google" onPress={signInWithGoogle} />
     </View>
   );
 }

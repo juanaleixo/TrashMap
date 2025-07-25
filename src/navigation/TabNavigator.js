@@ -49,14 +49,7 @@ const TabNavigator = () => {
             } else if (route.name === "Perfil") {
               iconName = focused ? "person" : "person-outline";
             } else if (route.name === "Adicionar") {
-              return (
-                <Ionicons
-                  name="add"
-                  size={36}
-                  color="#fff"
-                  style={{}}
-                />
-              );
+              return <Ionicons name="add" size={36} color="#fff" style={{}} />;
             }
             return <Ionicons name={iconName} size={size} color={color} />;
           },

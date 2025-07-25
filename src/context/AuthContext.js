@@ -1,27 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { initializeApp } from "firebase/app";
-import {
-  initializeAuth,
-  getReactNativePersistence,
-  onAuthStateChanged,
-  signOut,
-} from "firebase/auth";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyBddXs-09rUAOtVw2Dv0TMsTTINsRwjUGw",
-  authDomain: "trashmap-6b9fa.firebaseapp.com",
-  projectId: "trashmap-6b9fa",
-  storageBucket: "trashmap-6b9fa.appspot.com",
-  messagingSenderId: "526323389961",
-  appId: "1:526323389961:ios:06d4596a6a0e6dca5a0ad8",
-};
-
-const app = initializeApp(firebaseConfig);
-
-const auth = initializeAuth(app, {
-  persistence: getReactNativePersistence(AsyncStorage),
-});
+import { supabase } from "../lib/supabase";
 
 const AuthContext = createContext();
 
@@ -30,14 +8,27 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser || null);
+    const init = async () => {
+      const { data } = await supabase.auth.getUser();
+      setUser(data?.user ?? null);
       setLoading(false);
+    };
+
+    init();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
     });
-    return unsubscribe;
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const logout = () => signOut(auth);
+  const logout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) console.error(error);
+  };
 
   return (
     <AuthContext.Provider value={{ user, loading, logout }}>

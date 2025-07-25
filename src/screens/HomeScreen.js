@@ -57,7 +57,7 @@ const HomeScreen = () => {
     if (!loadingMateriais && materiais.length) {
       setMateriaisData(materiais);
       AsyncStorage.setItem("materiais_cache", JSON.stringify(materiais)).catch(
-        console.warn
+        console.warn,
       );
     }
   }, [loadingMateriais, materiais]);
