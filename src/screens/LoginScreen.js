@@ -3,12 +3,17 @@ import * as WebBrowser from "expo-web-browser";
 import * as Linking from "expo-linking";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../context/AuthContext";
+import { Platform } from "react-native";
 
 WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen() {
   const { refreshUser, setUser } = useAuth();
-  const redirectTo = Linking.createURL("/auth/callback");
+
+  const redirectTo = Platform.select({
+    ios: Linking.createURL("/auth/callback"),
+    android: "trashmap://auth/callback",
+  });
 
   async function signInWithGoogle() {
     console.log("[DEBUG] Iniciando signInWithGoogle");
@@ -76,7 +81,7 @@ export default function LoginScreen() {
 
       console.log(
         "[DEBUG] Sessão via exchangeCodeForSession:",
-        sessData.session,
+        sessData.session
       );
       await refreshUser();
       setUser(sessData.session.user);
