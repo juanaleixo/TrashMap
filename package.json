@@ -27,7 +27,6 @@
     "expo-dev-client": "~5.1.8",
     "expo-location": "^18.1.4",
     "expo-system-ui": "~5.0.7",
-    "firebase": "^11.7.1",
     "react": "19.0.0",
     "react-native": "0.79.2",
     "react-native-gesture-handler": "~2.25.0",
