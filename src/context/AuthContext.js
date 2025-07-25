@@ -1,46 +1,48 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { initializeApp } from "firebase/app";
-import {
-  initializeAuth,
-  getReactNativePersistence,
-  onAuthStateChanged,
-  signOut,
-} from "firebase/auth";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { supabase } from "../lib/supabase";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyBddXs-09rUAOtVw2Dv0TMsTTINsRwjUGw",
-  authDomain: "trashmap-6b9fa.firebaseapp.com",
-  projectId: "trashmap-6b9fa",
-  storageBucket: "trashmap-6b9fa.appspot.com",
-  messagingSenderId: "526323389961",
-  appId: "1:526323389961:ios:06d4596a6a0e6dca5a0ad8",
-};
-
-const app = initializeApp(firebaseConfig);
-
-const auth = initializeAuth(app, {
-  persistence: getReactNativePersistence(AsyncStorage),
+const AuthContext = createContext({
+  user: null,
+  loading: true,
+  logout: () => {},
+  refreshUser: () => {},
+  setUser: () => {},
 });
-
-const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  /** 1) Lê qualquer sessão já salva */
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser || null);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
       setLoading(false);
     });
-    return unsubscribe;
+
+    /** 2) Escuta login / logout em tempo real */
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const logout = () => signOut(auth);
+  const logout = () => supabase.auth.signOut();
+
+  const refreshUser = async () => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    setUser(session?.user ?? null);
+  };
 
   return (
-    <AuthContext.Provider value={{ user, loading, logout }}>
+    <AuthContext.Provider
+      value={{ user, loading, logout, refreshUser, setUser }}
+    >
       {children}
     </AuthContext.Provider>
   );
