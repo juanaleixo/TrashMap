@@ -35,7 +35,7 @@ const SearchScreen = () => {
 
   const toggleMaterial = (id) => {
     setSelectedMaterials((prev) =>
-      prev.includes(id) ? prev.filter((m) => m !== id) : [...prev, id],
+      prev.includes(id) ? prev.filter((m) => m !== id) : [...prev, id]
     );
   };
 
@@ -49,7 +49,7 @@ const SearchScreen = () => {
       let query = supabase
         .from("places_with_coordinates")
         .select(
-          "id, name, latitude, longitude, accepted_materials, accepted_materials_id",
+          "id, name, latitude, longitude, accepted_materials, accepted_materials_id"
         )
         .ilike("name", `%${searchText}%`);
 

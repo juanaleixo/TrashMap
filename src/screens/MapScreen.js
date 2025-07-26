@@ -1,266 +1,281 @@
-import React, { useEffect, useRef, useState } from "react";
+// src/screens/MapScreen.js
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
   StyleSheet,
   View,
   Text,
   TouchableOpacity,
   Dimensions,
+  Alert,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import MapboxGL from "@rnmapbox/maps";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
+import * as Location from "expo-location";
+import { useColorScheme } from "react-native";
+import { useRoute } from "@react-navigation/native";
+import { Ionicons } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
 } from "react-native-reanimated";
-import { supabase } from "../lib/supabase";
-import * as Location from "expo-location";
-import { useColorScheme } from "react-native";
-import { useRoute } from "@react-navigation/native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import NetInfo from "@react-native-community/netinfo";
-import { Ionicons } from "@expo/vector-icons";
+
+import { usePontos } from "../hooks/usePontos";
+import { useUserLocation } from "../hooks/useUserLocation";
 
 MapboxGL.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN);
 
+const SCREEN_HEIGHT = Dimensions.get("window").height;
+const SNAP_POINTS = ["10%", "30%"];
+
 export default function MapScreen() {
   const route = useRoute();
-
   const { selectedPontoSearch } = route.params || {};
 
-  const [pontos, setPontos] = useState([]);
-  const [selectedPonto, setSelectedPonto] = useState(null);
-  const [userLocation, setUserLocation] = useState(null);
+  const isDark = useColorScheme() === "dark";
+  const insets = useSafeAreaInsets();
+
+  /* ---------- dados ----------- */
+  const { pontos, refreshPontos } = usePontos(); // custom hook
+  const {
+    userLocation,
+    centerOnUserLocation, // callback memoizado
+    askPermissionIfNeeded,
+  } = useUserLocation();
+
+  /* ---------- estado UI -------- */
+  const [selectedId, setSelectedId] = useState(null);
   const bottomSheetRef = useRef(null);
   const cameraRef = useRef(null);
-  const insets = useSafeAreaInsets();
-  const isDarkMode = useColorScheme() === "dark";
 
-  const animatedIndex = useSharedValue(-1);
-  const animatedPosition = useSharedValue(0);
-  const { height: SCREEN_HEIGHT } = Dimensions.get("window");
+  const animateIdx = useSharedValue(-1);
+  const animatePos = useSharedValue(0);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const cached = await AsyncStorage.getItem("pontos_cache");
-        if (cached) {
-          setPontos(JSON.parse(cached));
-        }
-      } catch (e) {
-        console.warn("Falha ao ler cache de pontos:", e);
-      }
-
-      // Verifica conectividade
-      const netState = await NetInfo.fetch();
-
-      if (netState.isConnected) {
-        // Tem internet → busca dados atualizados
-        const { data } = await supabase.rpc("listar_pontos_mapa");
-        if (data) {
-          setPontos(data);
-          try {
-            await AsyncStorage.setItem("pontos_cache", JSON.stringify(data));
-          } catch (e) {
-            console.warn("Falha ao salvar cache:", e);
-          }
-        }
-      }
-
-      centerOnUserLocation();
-    })();
+  /* ---------- efeitos init ------ */
+  React.useEffect(() => {
+    askPermissionIfNeeded().catch(console.warn);
   }, []);
 
-  // Atualiza o estado com os parâmetros recebidos para centralizar o mapa
-  useEffect(() => {
-    if (selectedPontoSearch) {
-      setSelectedPonto(selectedPontoSearch);
-      setTimeout(() => {
-        handleMarkerPress(selectedPontoSearch);
-      }, 200);
-    }
-  }, [selectedPontoSearch]);
+  React.useEffect(() => {
+    if (!selectedPontoSearch) return;
 
-  const handleMarkerPress = (ponto) => {
-    setSelectedPonto(ponto);
-    if (cameraRef.current) {
-      cameraRef.current.setCamera({
-        centerCoordinate: [ponto.longitude, ponto.latitude],
-        zoomLevel: 12,
-        animationDuration: 200,
+    const t = setTimeout(() => {
+      handleMarkerPress(selectedPontoSearch.id, {
+        longitude: selectedPontoSearch.longitude,
+        latitude: selectedPontoSearch.latitude,
       });
-    }
-    bottomSheetRef.current?.expand();
-  };
+    }, 200);
 
-  const centerOnUserLocation = async () => {
+    return () => clearTimeout(t);
+  }, [selectedPontoSearch, handleMarkerPress]);
+
+  /* ---------- handlers ---------- */
+  const handleMarkerPress = useCallback(
+    (id, coords) => {
+      setSelectedId(id);
+      cameraRef.current?.setCamera({
+        centerCoordinate: [coords.longitude, coords.latitude],
+        zoomLevel: 13,
+        animationDuration: 250,
+      });
+      bottomSheetRef.current?.expand();
+    },
+    [cameraRef, bottomSheetRef]
+  );
+
+  const handleMapPress = useCallback(() => {
+    bottomSheetRef.current?.close();
+    setSelectedId(null);
+  }, []);
+
+  // centra assim que o estilo do mapa terminar de carregar
+  const handleMapReady = useCallback(async () => {
     try {
-      const { status } = await Location.getForegroundPermissionsAsync();
-      if (status === "granted") {
-        const location =
-          (await Location.getLastKnownPositionAsync()) ||
-          (await Location.getCurrentPositionAsync({}));
-        cameraRef.current?.setCamera({
-          centerCoordinate: [
-            location.coords.longitude,
-            location.coords.latitude,
-          ],
-          animationMode: "flyTo",
+      const coords = await centerOnUserLocation();
+      // se conseguir a posição → foca nela; senão fica no default (Brasil)
+      if (coords && cameraRef.current) {
+        cameraRef.current.setCamera({
+          centerCoordinate: [coords.longitude, coords.latitude],
           zoomLevel: 12,
-          animationDuration: 1000,
+          animationDuration: 0,
         });
       }
-    } catch (error) {
-      console.warn("Erro ao centralizar no usuário:", error);
+    } catch {
+      /* silencioso: fallback já é Brasil */
     }
-  };
+  }, [centerOnUserLocation]);
 
-  const animatedMapStyle = useAnimatedStyle(() => {
-    const bottomOffset = Math.max(
+  /* ---------- memo ---------- */
+  const selectedPonto = useMemo(
+    () => pontos.find((p) => p.id === selectedId),
+    [pontos, selectedId]
+  );
+
+  const mapPaddingStyle = useAnimatedStyle(() => ({
+    paddingBottom: Math.max(
       0,
-      SCREEN_HEIGHT - animatedPosition.value - 60 - insets.bottom
-    );
-    return {
-      marginBottom: bottomOffset,
-    };
-  });
+      SCREEN_HEIGHT - animatePos.value - 60 - insets.bottom
+    ),
+  }));
 
+  /* ---------- render ---------- */
   return (
-    <GestureHandlerRootView style={styles.container}>
-      <Animated.View style={[styles.map, animatedMapStyle]}>
+    <View style={styles.flex1}>
+      {/* Mapa */}
+      <Animated.View style={[styles.flex1, mapPaddingStyle]}>
         <MapboxGL.MapView
-          style={StyleSheet.absoluteFill}
-          styleURL={
-            isDarkMode ? MapboxGL.StyleURL.Dark : MapboxGL.StyleURL.Street
-          }
-          logoEnabled={false}
+          style={styles.map}
+          styleURL={isDark ? MapboxGL.StyleURL.Dark : MapboxGL.StyleURL.Street}
           attributionEnabled={false}
+          logoEnabled={false}
           scaleBarEnabled={false}
+          onPress={handleMapPress}
           surfaceView={false}
-          onPress={() => {
-            bottomSheetRef.current?.close();
-            setSelectedPonto(null);
-          }}
+          onDidFinishLoadingMap={handleMapReady}
         >
           <MapboxGL.Camera
-            centerCoordinate={[-51.9253, -14.235]}
             ref={cameraRef}
+            defaultSettings={{
+              centerCoordinate: [-51.9253, -14.235],
+              zoomLevel: 4,
+            }}
           />
+
           <MapboxGL.UserLocation visible={true} />
-          {pontos.map((p) => (
-            <MapboxGL.PointAnnotation
-              key={p.id}
-              id={String(p.id)}
-              coordinate={[p.longitude, p.latitude]}
-              onSelected={() => {
-                handleMarkerPress(p);
+
+          {/* Marcadores via GeoJSON → SymbolLayer */}
+          <MapboxGL.ShapeSource
+            id="pontos"
+            shape={{
+              type: "FeatureCollection",
+              features: pontos.map((p) => ({
+                type: "Feature",
+                id: p.id,
+                properties: { pontoId: p.id },
+                geometry: {
+                  type: "Point",
+                  coordinates: [p.longitude, p.latitude],
+                },
+              })),
+            }}
+            onPress={(e) => {
+              const { properties, geometry } = e.features[0];
+              handleMarkerPress(properties.pontoId, {
+                longitude: geometry.coordinates[0],
+                latitude: geometry.coordinates[1],
+              });
+            }}
+          >
+            <MapboxGL.CircleLayer
+              id="ponto-circle"
+              style={{
+                circleRadius: 6,
+                circleColor: "#219653",
+                circleStrokeWidth: 2,
+                circleStrokeColor: "#ffffff",
               }}
-            >
-              <View style={styles.marker} />
-            </MapboxGL.PointAnnotation>
-          ))}
+            />
+          </MapboxGL.ShapeSource>
         </MapboxGL.MapView>
       </Animated.View>
 
+      {/* Botão “localizar” */}
+      <TouchableOpacity
+        accessibilityLabel="Centralizar no usuário"
+        hitSlop={16}
+        style={[
+          styles.locBtn,
+          {
+            backgroundColor: isDark ? "#219653" : "#fff",
+            borderColor: isDark ? "#fff" : "#219653",
+            bottom: 30,
+          },
+        ]}
+        onPress={async () => {
+          try {
+            const coords = await centerOnUserLocation();
+            if (coords) {
+              cameraRef.current?.setCamera({
+                centerCoordinate: [coords.longitude, coords.latitude],
+                zoomLevel: 13,
+                animationDuration: 400,
+              });
+            }
+          } catch (e) {
+            Alert.alert("Ops", "Não foi possível encontrar sua localização.");
+          }
+        }}
+      >
+        <Ionicons
+          name="locate-outline"
+          size={22}
+          color={isDark ? "#fff" : "#219653"}
+        />
+      </TouchableOpacity>
+
+      {/* Bottom-sheet */}
       <BottomSheet
         ref={bottomSheetRef}
         index={-1}
-        snapPoints={["10%", "25%"]}
+        snapPoints={SNAP_POINTS}
         enablePanDownToClose
-        backgroundStyle={{ backgroundColor: isDarkMode ? "#333" : "#fff" }}
-        animatedIndex={animatedIndex}
-        animatedPosition={animatedPosition}
+        animateOnMount={false}
+        animatedIndex={animateIdx}
+        animatedPosition={animatePos}
+        backgroundStyle={{ backgroundColor: isDark ? "#333" : "#fff" }}
       >
         <BottomSheetView>
           {selectedPonto && (
-            <View style={{ padding: 20 }}>
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
+            <View style={styles.sheetContent}>
+              <View style={styles.sheetHeader}>
                 <Text
                   style={[
-                    { fontSize: 18, fontWeight: "bold" },
-                    { color: isDarkMode ? "#fff" : "#000" },
+                    styles.sheetTitle,
+                    { color: isDark ? "#fff" : "#000" },
                   ]}
                 >
                   {selectedPonto.name}
                 </Text>
-                <TouchableOpacity
-                  onPress={() => bottomSheetRef.current?.close()}
-                >
-                  <Text
-                    style={[
-                      { fontSize: 30 },
-                      { color: isDarkMode ? "#bbb" : "#667" },
-                    ]}
-                  >
-                    ✕
-                  </Text>
+                <TouchableOpacity hitSlop={12} onPress={handleMapPress}>
+                  <Text style={{ fontSize: 26, color: "#999" }}>×</Text>
                 </TouchableOpacity>
               </View>
+
               <Text
-                style={[
-                  { fontSize: 16, marginTop: 10 },
-                  { color: isDarkMode ? "#ddd" : "#000" },
-                ]}
+                style={[styles.sheetText, { color: isDark ? "#ccc" : "#333" }]}
               >
                 Materiais aceitos:{" "}
-                {selectedPonto.accepted_materials
-                  ? selectedPonto.accepted_materials.join(", ")
-                  : "N/A"}
+                {selectedPonto.accepted_materials?.join(", ") || "N/D"}
               </Text>
             </View>
           )}
         </BottomSheetView>
       </BottomSheet>
-      <TouchableOpacity
-        style={[
-          styles.locationButton,
-          {
-            backgroundColor: isDarkMode ? "#219653" : "#fff",
-            borderColor: isDarkMode ? "#fff" : "#219653",
-          },
-        ]}
-        onPress={centerOnUserLocation}
-        activeOpacity={0.8}
-      >
-        <Ionicons
-          name="locate-outline"
-          size={24}
-          color={isDarkMode ? "#fff" : "#219653"}
-        />
-      </TouchableOpacity>
-    </GestureHandlerRootView>
+    </View>
   );
 }
 
+/* ---------- estilos ---------- */
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  flex1: { flex: 1 },
   map: { flex: 1 },
-  marker: {
-    width: 20,
-    height: 20,
-    borderRadius: 30,
-    backgroundColor: "#219653",
-    borderWidth: 2,
-    borderColor: "#fff",
-  },
-  sheet: { padding: 20 },
-  title: { fontSize: 18, fontWeight: "bold" },
-  locationButton: {
+  locBtn: {
     position: "absolute",
-    bottom: 30,
-    right: 20,
+    right: 18,
     borderWidth: 2,
-    borderRadius: 25,
-    width: 50,
-    height: 50,
-    alignItems: "center",
+    borderRadius: 24,
+    width: 48,
+    height: 48,
     justifyContent: "center",
+    alignItems: "center",
+    elevation: 4,
   },
+  sheetContent: { padding: 20 },
+  sheetHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  sheetTitle: { fontSize: 18, fontWeight: "600" },
+  sheetText: { marginTop: 8, fontSize: 16 },
 });
