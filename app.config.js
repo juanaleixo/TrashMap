@@ -7,12 +7,13 @@ export default {
     orientation: "portrait",
     userInterfaceStyle: "automatic",
     assetBundlePatterns: ["**/*"],
-    icon: "./assets/images/icon.png",
+    icon: "./assets/images/icon-1024.png",
     scheme: "trashmap",
     android: {
       adaptiveIcon: {
-        foregroundImage: "./assets/images/foreground.png",
-        backgroundColor: "#8fff00",
+        foregroundImage: "./assets/images/icon-foreground.png",
+        backgroundImage: "./assets/images/icon-background.png",
+        monochromeImage: "./assets/images/icon-mono.png",
       },
       config: {
         googleMaps: {
